@@ -31,7 +31,7 @@ jobs:
 
     - name: Train model
       run: |
-        python -m train.py \
+        python -m train \
         --dataset1-loc "data/ratings.csv" \
         --dataset2-loc "data/movies.csv" \
         --embed-dim 16 \
