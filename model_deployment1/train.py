@@ -9,6 +9,7 @@ import torch.nn as nn
 import typer
 import torch
 import json
+import s3fs
 
 from utils.utils import set_seed,get_unique_movies,get_unique_users,get_movie_genres
 from preprocess.preprocessing import process_data
@@ -24,8 +25,8 @@ pd.set_option('display.max_rows', None)
 app=typer.Typer()
 
 @app.command()
-def train(dataset1_loc: Annotated[str, typer.Option(help="ratings dataset")] = None,
-          dataset2_loc: Annotated[str, typer.Option(help="movies dataset")] = None,
+def train(dataset1_s3loc: Annotated[str, typer.Option(help="ratings dataset")] = None,
+          dataset2_s3loc: Annotated[str, typer.Option(help="movies dataset")] = None,
           embed_dim: Annotated[int, typer.Option(help="dimensionality of embeddings")]=5,
           lr: Annotated[float, typer.Option(help="learning rate for model")]=.001,
           epochs: Annotated[int, typer.Option(help="Number of epochs")]=4):
@@ -33,19 +34,22 @@ def train(dataset1_loc: Annotated[str, typer.Option(help="ratings dataset")] = N
     start_time=time.time()
     set_seed(82)
     
-    train_data,test_data=process_data(dataset1_loc,dataset2_loc)
+    train_data,test_data=process_data(dataset1_s3loc,dataset2_s3loc)
     
-    unique_users=get_unique_users(dataset1_loc)
-    unique_movies=get_unique_movies(dataset1_loc)
-    movie_genres_dict=get_movie_genres(dataset2_loc)
+    unique_users=get_unique_users(dataset1_s3loc)
+    unique_movies=get_unique_movies(dataset1_s3loc)
+    movie_genres_dict=get_movie_genres(dataset2_s3loc)
     
     config_dict={'unique_users':unique_users,'unique_movies':unique_movies,'movie_genres_dict':movie_genres_dict}
-    with open("config/config_data.json", "w") as json_file:
-        json.dump(config_dict, json_file)
+    params_dict={"embed_dim":embed_dim,"lr":lr,"epochs":epochs}
+    
+    #Uploading data into S3
+    fs = s3fs.S3FileSystem()
+    bucket_name=dataset1_s3loc.split("//")[1].split("/")[0]
+    s3_path=f's3://{bucket_name}/config_params/'
+    print(s3_path)
 
-    with open("config/model_params.json","w") as file:
-        json.dump({"embed_dim":embed_dim,"lr":lr,"epochs":epochs},file)
-
+    
     train_dataset=SparseMatrixDataset(train_data)
     test_dataset=SparseMatrixDataset(test_data)
    
@@ -69,6 +73,18 @@ def train(dataset1_loc: Annotated[str, typer.Option(help="ratings dataset")] = N
 
     #Persisting the model
     torch.save(model.state_dict(), "saved_models/deepfm_model.pth")
+
+    # Check if folder exists, create if it doesn’t. Saving the params
+    if not fs.exists(s3_path):
+        fs.mkdir(s3_path)
+
+    with fs.open(f"{s3_path}config_data.json", "w") as json_file:
+        json.dump(config_dict, json_file)
+
+    with fs.open(f"{s3_path}model_params.json","w") as json_file:
+        json.dump(params_dict,json_file)
+    
+    print("JSON file written to s3 successfully")
 
 
 if __name__=="__main__":
