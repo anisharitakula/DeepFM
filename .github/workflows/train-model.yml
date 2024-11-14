@@ -2,7 +2,7 @@ name: ML Model Training
 
 on:
   push:
-    branches: [main]
+    branches: [main,github_wfs_s3data]
   workflow_dispatch:
 
 jobs:
