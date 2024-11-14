@@ -30,16 +30,14 @@ jobs:
         pip install -r requirements.txt
 
     #Set AWS credentials as environment variables
-    - name: Set AWS credentials
+    - name: Set AWS credentials & Train model
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-    - name: Train model
       run: |
         python -m train \
-        --dataset1-loc "data/ratings.csv" \
-        --dataset2-loc "data/movies.csv" \
+        --dataset1-loc "s3://deepfm-model/input_data/ratings.csv" \
+        --dataset2-loc "s3://deepfm-model/input_data/movies.csv" \
         --embed-dim 16 \
         --lr .005 \
         --epochs 4
