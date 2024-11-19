@@ -2,7 +2,7 @@ name: ML Model Training
 
 on:
   push:
-    branches: [main,github_wfs_s3data]
+    branches: [github_wfs_s3_tests]
   workflow_dispatch:
 
 jobs:
@@ -41,6 +41,12 @@ jobs:
         --embed-dim 16 \
         --lr .005 \
         --epochs 4
+    
+    #Run tests for code & data
+    - name: Run tests for code and data
+      run: |
+        PYTHONPATH=$(pwd) pytest -m code
+        pytest --dataset1-loc='s3://deepfm-model/input_data/ratings.csv' tests/data --verbose --disable-warnings
 
 
 

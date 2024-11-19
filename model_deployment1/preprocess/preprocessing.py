@@ -2,13 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def process_data(dataset1_s3loc,dataset2_s3loc):
-
-    
-
-    # Retrieve the file from S3
-    data=pd.read_csv(dataset1_s3loc)
-    movie_data=pd.read_csv(dataset2_s3loc)
+def process_data(data,movie_data):
 
     movie_genres=set()
     for genre in movie_data['genres']:

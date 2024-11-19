@@ -33,12 +33,16 @@ def train(dataset1_s3loc: Annotated[str, typer.Option(help="ratings dataset")] =
 
     start_time=time.time()
     set_seed(82)
+
+    # Retrieve the file from S3
+    data=pd.read_csv(dataset1_s3loc)
+    movie_data=pd.read_csv(dataset2_s3loc)
     
-    train_data,test_data=process_data(dataset1_s3loc,dataset2_s3loc)
+    train_data,test_data=process_data(data,movie_data)
     
-    unique_users=get_unique_users(dataset1_s3loc)
-    unique_movies=get_unique_movies(dataset1_s3loc)
-    movie_genres_dict=get_movie_genres(dataset2_s3loc)
+    unique_users=get_unique_users(data)
+    unique_movies=get_unique_movies(data)
+    movie_genres_dict=get_movie_genres(movie_data)
     
     config_dict={'unique_users':unique_users,'unique_movies':unique_movies,'movie_genres_dict':movie_genres_dict}
     params_dict={"embed_dim":embed_dim,"lr":lr,"epochs":epochs}

@@ -11,16 +11,13 @@ def set_seed(seed=42):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-def get_unique_users(dataset_loc):
-    data=pd.read_csv(dataset_loc)
+def get_unique_users(data):
     return data['userId'].nunique()
 
-def get_unique_movies(dataset_loc):
-    data=pd.read_csv(dataset_loc)
+def get_unique_movies(data):
     return data['movieId'].nunique()
 
-def get_movie_genres(dataset_loc):
-    movie_data=pd.read_csv(dataset_loc)
+def get_movie_genres(movie_data):
     movie_genres=set()
     for genre in movie_data['genres']:
         movie_genres.update(genre.split('|'))
