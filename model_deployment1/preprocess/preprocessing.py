@@ -4,6 +4,8 @@ import numpy as np
 
 def process_data(data,movie_data):
 
+    data=data.copy()
+    movie_data=movie_data.copy()
     movie_genres=set()
     for genre in movie_data['genres']:
         movie_genres.update(genre.split('|'))
