@@ -29,42 +29,45 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Check directory permissions
+      run: ls -l /home/runner/work/DeepFM/DeepFM/model_deployment1
+
+    - name: Reset permissions on the model_deployment1 directory
+      run: sudo chown -R $USER:$USER ./model_deployment1
+
     - name: Set up POSTGRESQL
       env:
-        PGUSER: ${{ secrets.POSTGRES_USER }}
+        PGUSER: ${{ secrets.POSTGRES_USER }}  # This should be 'anish' based on your setup
         PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       run: |
+        # Install PostgreSQL and start the service
         sudo apt-get update
         sudo apt-get install -y postgresql postgresql-contrib
         sudo service postgresql start
 
-        
+        # Update authentication method to allow password login
         sudo sed -i "s/local   all             all                                     peer/local   all             all                                     md5/g" /etc/postgresql/*/main/pg_hba.conf
-        
         sudo service postgresql restart
 
+        # Update password for the PostgreSQL user (anish)
         sudo -u postgres psql -c "ALTER USER $PGUSER PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
 
+        # Create database and user for MLFlow
+        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U postgres -c "CREATE DATABASE mlflow_db;"
+        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U postgres -d mlflow_db -c "CREATE USER mlflow_user WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U postgres -d mlflow_db -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO mlflow_user;"
 
-
-        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U $PGUSER -c "CREATE DATABASE mlflow_db;"
-        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U $PGUSER -d mlflow_db -c "CREATE USER mlflow_user WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
-        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U $PGUSER -d mlflow_db -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO mlflow_user;"
+        # Ensure the PostgreSQL user 'mlflow_user' exists and has the proper privileges
+        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U postgres -c "SELECT * FROM pg_roles WHERE rolname='mlflow_user';"
 
     # Ensure `train_workflow.sh` is executable
     - name: Make workflow.sh executable
       run: chmod +x train_workflow.sh
 
-  
-    #Set AWS credentials as environment variables & Run workflow
+    # Set AWS credentials as environment variables & Run workflow
     - name: Set AWS credentials & Train model
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost/mlflow_db"
       run: ./train_workflow.sh
-    
-    
-
-
-
