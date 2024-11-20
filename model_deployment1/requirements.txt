@@ -4,4 +4,4 @@ torch==2.2.2
 numpy==1.26.4
 s3fs==2024.10.0
 pytest==8.3.3
-
+mlflow==2.18.0

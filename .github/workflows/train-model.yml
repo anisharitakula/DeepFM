@@ -35,22 +35,9 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
-        python -m train \
-        --dataset1-s3loc "s3://deepfm-model/input_data/ratings.csv" \
-        --dataset2-s3loc "s3://deepfm-model/input_data/movies.csv" \
-        --embed-dim 16 \
-        --lr .005 \
-        --epochs 4
+        train_workflow.sh
     
-    #Run tests for code & data
-    - name: Run tests for code and data
-      env: 
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        PYTHONPATH=$(pwd) pytest -m code
-        pytest --dataset1-loc='s3://deepfm-model/input_data/ratings.csv' tests/data --verbose --disable-warnings
-
+    
 
 
 

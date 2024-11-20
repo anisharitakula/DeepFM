@@ -14,6 +14,7 @@ class BaseLearner:
             print(f"Train loss after epoch {epoch} is {train_loss}")
             print(f"Val loss after epoch {epoch} is {val_loss}")
             print("/n")
+        return val_loss
     
     def _train_epoch(self):
         running_loss=0

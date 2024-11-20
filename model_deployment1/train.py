@@ -10,6 +10,8 @@ import typer
 import torch
 import json
 import s3fs
+import mlflow
+import mlflow.pytorch
 
 from utils.utils import set_seed,get_unique_movies,get_unique_users,get_movie_genres
 from preprocess.preprocessing import process_data
@@ -17,12 +19,16 @@ from preprocess.sparse_dataset import SparseMatrixDataset
 from preprocess.collate_fn import fm_collate_fn
 from models.dfm import ModelDFM
 from models.base_learner import BaseLearner
+from config.config import EXPERIMENT_NAME,SEED
 from typing_extensions import Annotated
 
 pd.set_option('display.max_rows', None)
 
 #Initialize the typer app
 app=typer.Typer()
+
+# Set experiment (MLflow will create it in S3 if it doesn’t exist)
+mlflow.set_experiment(EXPERIMENT_NAME)
 
 @app.command()
 def train(dataset1_s3loc: Annotated[str, typer.Option(help="ratings dataset")] = None,
@@ -32,7 +38,7 @@ def train(dataset1_s3loc: Annotated[str, typer.Option(help="ratings dataset")] =
           epochs: Annotated[int, typer.Option(help="Number of epochs")]=4):
 
     start_time=time.time()
-    set_seed(82)
+    set_seed(SEED)
 
     # Retrieve the file from S3
     data=pd.read_csv(dataset1_s3loc)
@@ -44,14 +50,9 @@ def train(dataset1_s3loc: Annotated[str, typer.Option(help="ratings dataset")] =
     unique_movies=get_unique_movies(data)
     movie_genres_dict=get_movie_genres(movie_data)
     
-    config_dict={'unique_users':unique_users,'unique_movies':unique_movies,'movie_genres_dict':movie_genres_dict}
-    params_dict={"embed_dim":embed_dim,"lr":lr,"epochs":epochs}
     
-    #Uploading data into S3
-    fs = s3fs.S3FileSystem()
-    bucket_name=dataset1_s3loc.split("//")[1].split("/")[0]
-    s3_path=f's3://{bucket_name}/config_params/'
-    print(s3_path)
+    
+    
 
     
     train_dataset=SparseMatrixDataset(train_data)
@@ -67,7 +68,7 @@ def train(dataset1_s3loc: Annotated[str, typer.Option(help="ratings dataset")] =
     criterion=nn.MSELoss()
 
     cb=BaseLearner(train_dataloader,test_dataloader,model,optimizer,lr,criterion)
-    cb.fit(epochs)
+    val_loss=cb.fit(epochs)
 
     baseline=[np.mean(test_data['rating'])]*len(test_data['rating'])
     mean_square_error=((test_data['rating']-baseline)**2).mean()
@@ -75,21 +76,27 @@ def train(dataset1_s3loc: Annotated[str, typer.Option(help="ratings dataset")] =
     end_time=time.time()
     print(f"Total execution time in minutes is {(end_time-start_time)/60}")
 
-    #Persisting the model
-    torch.save(model.state_dict(), "saved_models/deepfm_model.pth")
+    # Start an MLflow run
+    with mlflow.start_run():
 
-    # Check if folder exists, create if it doesn’t. Saving the params
-    if not fs.exists(s3_path):
-        fs.mkdir(s3_path)
+        #Log parameters
+        mlflow.log_param("embed_dim", embed_dim)
+        mlflow.log_param("learning_rate", lr)
+        mlflow.log_param("random_seed", SEED)
+        mlflow.log_param("epochs", epochs)
 
-    with fs.open(f"{s3_path}config_data.json", "w") as json_file:
-        json.dump(config_dict, json_file)
+        # Log a metric
+        mlflow.log_metric("final_loss", val_loss)
 
-    with fs.open(f"{s3_path}model_params.json","w") as json_file:
-        json.dump(params_dict,json_file)
+        # Log the PyTorch model
+        mlflow.pytorch.log_model(model, artifact_path="model")
+
+        print("Model logged successfully!")
+        
+        #Persisting the model
+        #torch.save(model.state_dict(), "saved_models/deepfm_model.pth")
+
     
-    print("JSON file written to s3 successfully")
-
 
 if __name__=="__main__":
     app()   
