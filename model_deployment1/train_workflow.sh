@@ -1,6 +1,6 @@
 #Setting mlflow uri environment variables
-export MLFLOW_TRACKING_URI=$(python -c "from config import config: print config.BACKEND_STORE_URI")
-export MLFLOW_ARTIFACT_URI=$(python -c "from config import config: print config.MLFLOW_ARTIFACT_URI")
+export MLFLOW_TRACKING_URI=$(python -c "from config import config; print config.BACKEND_STORE_URI")
+export MLFLOW_ARTIFACT_URI=$(python -c "from config import config; print config.MLFLOW_ARTIFACT_URI")
 export DATASET1_S3LOC="s3://deepfm-model/input_data/ratings.csv"
 export DATASET2_S3LOC="s3://deepfm-model/input_data/movies.csv"
 
