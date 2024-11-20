@@ -37,9 +37,19 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y postgresql postgresql-contrib
         sudo service postgresql start
-        psql -U $PGUSER -c "CREATE DATABASE mlflow_db;"
-        psql -U $PGUSER -d mlflow_db -c "CREATE USER mlflow_user WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
-        psql -U $PGUSER -d mlflow_db -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO mlflow_user;"
+
+        
+        sudo sed -i "s/local   all             all                                     peer/local   all             all                                     md5/g" /etc/postgresql/*/main/pg_hba.conf
+        
+        sudo service postgresql restart
+
+        sudo -u postgres psql -c "ALTER USER $PGUSER PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+
+
+
+        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U $PGUSER -c "CREATE DATABASE mlflow_db;"
+        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U $PGUSER -d mlflow_db -c "CREATE USER mlflow_user WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U $PGUSER -d mlflow_db -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO mlflow_user;"
 
     # Ensure `train_workflow.sh` is executable
     - name: Make workflow.sh executable
