@@ -28,7 +28,19 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
+
+    - name: Set up POSTGRESQL
+      env:
+        PGUSER: ${{ secrets.POSTGRES_USER }}
+        PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql postgresql-contrib
+        sudo service postgresql start
+        psql -U $PGUSER -c "CREATE DATABASE mlflow_db;"
+        psql -U $PGUSER -d mlflow_db -c "CREATE USER mlflow_user WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+        psql -U $PGUSER -d mlflow_db -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO mlflow_user;"
+
     # Ensure `train_workflow.sh` is executable
     - name: Make workflow.sh executable
       run: chmod +x train_workflow.sh
@@ -39,6 +51,7 @@ jobs:
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost/mlflow_db"
       run: ./train_workflow.sh
     
     
