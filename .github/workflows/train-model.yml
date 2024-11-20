@@ -31,9 +31,10 @@ jobs:
 
     - name: Check directory permissions
       run: ls -l /home/runner/work/DeepFM/DeepFM/model_deployment1
+    
 
     - name: Reset permissions on the model_deployment1 directory
-      run: sudo chown -R $USER:$USER ./model_deployment1
+      run: sudo chown -R $USER:$USER .
 
     - name: Set up POSTGRESQL
       env:
