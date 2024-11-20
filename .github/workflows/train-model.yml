@@ -33,8 +33,10 @@ jobs:
       run: ls -l /home/runner/work/DeepFM/DeepFM/model_deployment1
     
 
-    - name: Reset permissions on the model_deployment1 directory
-      run: sudo chown -R $USER:$USER .
+    - name: Check if directory exists and reset permissions
+      run: |
+        echo "Checking the files/folder"
+        ls
 
     - name: Set up POSTGRESQL
       env:
@@ -50,7 +52,7 @@ jobs:
         sudo sed -i "s/local   all             all                                     peer/local   all             all                                     md5/g" /etc/postgresql/*/main/pg_hba.conf
         sudo service postgresql restart
 
-        # Update password for the PostgreSQL user (anish)
+        # Update password for the PostgreSQL user
         sudo -u postgres psql -c "ALTER USER $PGUSER PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
 
         # Create database and user for MLFlow
