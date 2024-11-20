@@ -28,14 +28,18 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+    
+    # Ensure `train_workflow.sh` is executable
+    - name: Make workflow.sh executable
+      run: chmod +x train_workflow.sh
 
-    #Set AWS credentials as environment variables
+  
+    #Set AWS credentials as environment variables & Run workflow
     - name: Set AWS credentials & Train model
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        train_workflow.sh
+      run: ./train_workflow.sh
     
     
 
