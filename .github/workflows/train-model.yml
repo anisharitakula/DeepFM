@@ -50,8 +50,12 @@ jobs:
         # Explicitly pass PostgreSQL credentials
         POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        # Updated PostgreSQL URI
-        POSTGRES_URI: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/mlflow_db
+        # Updated PostgreSQL URI using localhost
+        POSTGRES_URI: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/mlflow_db
+        MLFLOW_TRACKING_URI: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/mlflow_db
+        MLFLOW_ARTIFACT_URI: s3://deepfm-model
+        DATASET1_S3LOC: s3://deepfm-model/input_data/ratings.csv
+        DATASET2_S3LOC: s3://deepfm-model/input_data/movies.csv
       run: |
         # Comprehensive PostgreSQL connection debug
         python3 - << EOF
@@ -63,7 +67,7 @@ jobs:
                 'dbname': 'mlflow_db',
                 'user': os.environ.get('POSTGRES_USER'),
                 'password': os.environ.get('POSTGRES_PASSWORD'),
-                'host': 'postgres',
+                'host': 'localhost',
                 'port': '5432'
             }
             
@@ -85,6 +89,12 @@ jobs:
             import traceback
             traceback.print_exc()
         EOF
+        
+        # Verify PostgreSQL is running
+        sudo systemctl status postgresql.service
+        
+        # List databases to confirm setup
+        psql -l
         
         # Make script executable
         chmod +x train_workflow.sh

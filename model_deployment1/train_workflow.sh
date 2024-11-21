@@ -10,7 +10,8 @@ mlflow server \
     --backend-store-uri $MLFLOW_TRACKING_URI \
     --default-artifact-root $MLFLOW_ARTIFACT_URI \
     --host 0.0.0.0 \
-    --port 5000 &
+    --port 5000 \
+    --workers 1 &
 
 #Wait for server to start
 sleep 10
