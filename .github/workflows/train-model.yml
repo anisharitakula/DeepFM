@@ -52,10 +52,10 @@ jobs:
         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         # Updated PostgreSQL URI using localhost
         POSTGRES_URI: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/mlflow_db
-        MLFLOW_TRACKING_URI: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/mlflow_db
-        MLFLOW_ARTIFACT_URI: s3://deepfm-model
-        DATASET1_S3LOC: s3://deepfm-model/input_data/ratings.csv
-        DATASET2_S3LOC: s3://deepfm-model/input_data/movies.csv
+        #MLFLOW_TRACKING_URI: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/mlflow_db
+        #MLFLOW_ARTIFACT_URI: s3://deepfm-model
+        #DATASET1_S3LOC: s3://deepfm-model/input_data/ratings.csv
+        #DATASET2_S3LOC: s3://deepfm-model/input_data/movies.csv
       run: |
         # Comprehensive PostgreSQL connection debug
         python3 - << EOF

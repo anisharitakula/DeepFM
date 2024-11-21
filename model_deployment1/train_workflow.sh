@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #Setting mlflow uri environment variables
 export MLFLOW_TRACKING_URI=$POSTGRES_URI
 export MLFLOW_ARTIFACT_URI=$(python -c "from config import config; print(config.MLFLOW_ARTIFACT_URI)")
@@ -7,8 +9,8 @@ export DATASET2_S3LOC="s3://deepfm-model/input_data/movies.csv"
 
 #Run the MLflow server
 mlflow server \
-    --backend-store-uri $MLFLOW_TRACKING_URI \
-    --default-artifact-root $MLFLOW_ARTIFACT_URI \
+    --backend-store-uri "$MLFLOW_TRACKING_URI" \
+    --default-artifact-root "$MLFLOW_ARTIFACT_URI" \
     --host 0.0.0.0 \
     --port 5000 \
     --workers 1 &
