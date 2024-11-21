@@ -71,7 +71,21 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost/mlflow_db"
       run: |
+        # Debug information
         echo "Current directory: $(pwd)"
-        echo "Running train_workflow.sh"
-        ./train_workflow.sh
+        pwd
+        echo "Script permissions before:"
+        ls -l train_workflow.sh
+        
+        # Make script executable and verify
+        sudo chmod +x train_workflow.sh
+        echo "Script permissions after:"
+        ls -l train_workflow.sh
+        
+        # Print script content (excluding sensitive info)
+        echo "Script content:"
+        grep -v "secret\|password" train_workflow.sh
+        
+        # Execute script
+        bash train_workflow.sh
 
