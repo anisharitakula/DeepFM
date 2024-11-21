@@ -46,46 +46,46 @@ jobs:
           psql -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO ${{ secrets.POSTGRES_USER }};"
         '
 
-        # Configure pg_hba.conf to allow password authentication
+        # Configure pg_hba.conf
         sudo tee /etc/postgresql/*/main/pg_hba.conf > /dev/null <<EOL
         local   all             postgres                                peer
         local   all             all                                     md5
         host    all             all             127.0.0.1/32           md5
         host    all             all             ::1/128                 md5
-        EOL
+EOL
 
-        # Restart PostgreSQL to apply changes
+        # Restart PostgreSQL
         sudo systemctl restart postgresql.service
 
-        # Verify setup (from postgres home directory)
-        sudo -u postgres bash -c '
-          cd ~
-          psql -c "\du"
-          psql -c "\l"
-        '
-
-    - name: Run the workflow.sh
+    - name: Prepare and run workflow script
       working-directory: ./model_deployment1
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost/mlflow_db"
+        # Fixed PostgreSQL URI format
+        POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@127.0.0.1:5432/mlflow_db"
       run: |
-        # Debug information
-        echo "Current directory: $(pwd)"
-        pwd
-        echo "Script permissions before:"
-        ls -l train_workflow.sh
+        # Debug PostgreSQL connection
+        echo "Testing PostgreSQL connection..."
+        python -c "
+        import psycopg2
+        try:
+            conn = psycopg2.connect(
+                dbname='mlflow_db',
+                user='${{ secrets.POSTGRES_USER }}',
+                password='${{ secrets.POSTGRES_PASSWORD }}',
+                host='127.0.0.1',
+                port='5432'
+            )
+            print('PostgreSQL connection successful!')
+            conn.close()
+        except Exception as e:
+            print(f'PostgreSQL connection failed: {e}')
+        "
         
-        # Make script executable and verify
+        # Make script executable
         sudo chmod +x train_workflow.sh
-        echo "Script permissions after:"
-        ls -l train_workflow.sh
         
-        # Print script content (excluding sensitive info)
-        echo "Script content:"
-        grep -v "secret\|password" train_workflow.sh
-        
-        # Execute script
-        bash train_workflow.sh
-
+        # Execute script with debug output
+        echo "Running train_workflow.sh..."
+        bash -x train_workflow.sh
