@@ -13,6 +13,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     
+    - name: Print Working Directory and Repository Structure
+      run: |
+        pwd
+        ls -R
+
     - name: Set up python
       uses: actions/setup-python@v4
       with:
@@ -50,8 +55,10 @@ jobs:
         sudo -u postgres psql -c "\du"
         sudo -u postgres psql -c "\l"
 
-    - name: Make workflow script executable
-      run: chmod +x ./model_deployment1/train_workflow.sh
+    - name: Locate and make workflow script executable
+      run: |
+        find . -name "train_workflow.sh"
+        chmod +x $(find . -name "train_workflow.sh")
 
     - name: Train model
       env: 
@@ -59,5 +66,18 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost/mlflow_db"
       run: |
-        cd ./model_deployment1
-        ./train_workflow.sh
+        SCRIPT_PATH=$(find . -name "train_workflow.sh")
+        if [ -z "$SCRIPT_PATH" ]; then
+          echo "train_workflow.sh not found!"
+          exit 1
+        fi
+        
+        echo "Found script at: $SCRIPT_PATH"
+        chmod +x "$SCRIPT_PATH"
+        
+        # Explicitly set working directory to script's parent directory
+        SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+        cd "$SCRIPT_DIR"
+        
+        echo "Current directory: $(pwd)"
+        "$SCRIPT_PATH"
