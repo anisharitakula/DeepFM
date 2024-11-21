@@ -47,23 +47,28 @@ jobs:
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        # Explicitly pass PostgreSQL credentials
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         # Updated PostgreSQL URI
         POSTGRES_URI: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/mlflow_db
       run: |
         # Comprehensive PostgreSQL connection debug
-        python -c "
-        import psycopg2
+        python3 - << EOF
         import os
-        
+        import psycopg2
+
         try:
             conn_params = {
                 'dbname': 'mlflow_db',
-                'user': os.environ['POSTGRES_USER'],
-                'password': os.environ['POSTGRES_PASSWORD'],
+                'user': os.environ.get('POSTGRES_USER'),
+                'password': os.environ.get('POSTGRES_PASSWORD'),
                 'host': 'postgres',
                 'port': '5432'
             }
-            print('Connection Parameters:', conn_params)
+            
+            # Print out connection details (without password) for debugging
+            print('Connection Parameters:', {k: v for k, v in conn_params.items() if k != 'password'})
             
             conn = psycopg2.connect(**conn_params)
             print('PostgreSQL connection successful!')
@@ -79,7 +84,7 @@ jobs:
             print(f'PostgreSQL connection failed: {e}')
             import traceback
             traceback.print_exc()
-        "
+        EOF
         
         # Make script executable
         chmod +x train_workflow.sh
