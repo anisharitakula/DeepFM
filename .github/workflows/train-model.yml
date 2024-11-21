@@ -90,12 +90,6 @@ jobs:
             traceback.print_exc()
         EOF
         
-        # Verify PostgreSQL is running
-        sudo systemctl status postgresql.service
-        
-        # List databases to confirm setup
-        psql -l
-        
         # Make script executable
         chmod +x train_workflow.sh
         
