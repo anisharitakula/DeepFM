@@ -9,11 +9,26 @@ jobs:
   train:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: mlflow_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
     
-    - name: Set up python
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
@@ -25,67 +40,49 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
-    - name: Set up PostgreSQL
-      env:
-        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      run: |
-        # Install PostgreSQL
-        sudo apt-get update
-        sudo apt-get install -y postgresql postgresql-contrib
-
-        # Start PostgreSQL service
-        sudo systemctl start postgresql.service
-
-        # Change to postgres user's home directory before running commands
-        sudo -u postgres bash -c '
-          cd ~
-          psql -c "CREATE USER ${{ secrets.POSTGRES_USER }} WITH PASSWORD '\''${{ secrets.POSTGRES_PASSWORD }}'\'';"
-          psql -c "CREATE DATABASE mlflow_db;"
-          psql -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO ${{ secrets.POSTGRES_USER }};"
-        '
-
-        # Configure pg_hba.conf
-        sudo tee /etc/postgresql/*/main/pg_hba.conf > /dev/null <<EOL
-        local   all             postgres                                peer
-        local   all             all                                     md5
-        host    all             all             127.0.0.1/32           md5
-        host    all             all             ::1/128                 md5
-        EOL
-
-        # Restart PostgreSQL
-        sudo systemctl restart postgresql.service
+        pip install psycopg2-binary  # Explicitly install psycopg2
 
     - name: Prepare and run workflow script
       working-directory: ./model_deployment1
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        # Fixed PostgreSQL URI format
-        POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@127.0.0.1:5432/mlflow_db"
+        # Updated PostgreSQL URI
+        POSTGRES_URI: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/mlflow_db
       run: |
-        # Debug PostgreSQL connection
-        echo "Testing PostgreSQL connection..."
+        # Comprehensive PostgreSQL connection debug
         python -c "
         import psycopg2
+        import os
+        
         try:
-            conn = psycopg2.connect(
-                dbname='mlflow_db',
-                user='${{ secrets.POSTGRES_USER }}',
-                password='${{ secrets.POSTGRES_PASSWORD }}',
-                host='127.0.0.1',
-                port='5432'
-            )
+            conn_params = {
+                'dbname': 'mlflow_db',
+                'user': os.environ['POSTGRES_USER'],
+                'password': os.environ['POSTGRES_PASSWORD'],
+                'host': 'postgres',
+                'port': '5432'
+            }
+            print('Connection Parameters:', conn_params)
+            
+            conn = psycopg2.connect(**conn_params)
             print('PostgreSQL connection successful!')
+            
+            # Create a cursor and execute a simple query
+            cur = conn.cursor()
+            cur.execute('SELECT version();')
+            print('PostgreSQL version:', cur.fetchone())
+            
+            cur.close()
             conn.close()
         except Exception as e:
             print(f'PostgreSQL connection failed: {e}')
+            import traceback
+            traceback.print_exc()
         "
         
         # Make script executable
-        sudo chmod +x train_workflow.sh
+        chmod +x train_workflow.sh
         
-        # Execute script with debug output
-        echo "Running train_workflow.sh..."
+        # Execute script with comprehensive debug output
         bash -x train_workflow.sh
