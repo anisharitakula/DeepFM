@@ -12,6 +12,8 @@ mlflow server \
     --host 0.0.0.0 \
     --port 5000 &
 
+#Wait for server to start
+sleep 10
 
 #Run the model training code
 python -m train \
