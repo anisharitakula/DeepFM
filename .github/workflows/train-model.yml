@@ -13,11 +13,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     
-    - name: Print Working Directory and Repository Structure
-      run: |
-        pwd
-        ls -R
-
     - name: Set up python
       uses: actions/setup-python@v4
       with:
@@ -26,9 +21,10 @@ jobs:
         cache-dependency-path: './model_deployment1/requirements.txt'
     
     - name: Install dependencies
+      working-directory: ./model_deployment1
       run: |
         python -m pip install --upgrade pip
-        pip install -r ./model_deployment1/requirements.txt
+        pip install -r requirements.txt
 
     - name: Set up PostgreSQL
       env:
@@ -42,42 +38,40 @@ jobs:
         # Start PostgreSQL service
         sudo systemctl start postgresql.service
 
-        # Create PostgreSQL user and database
-        sudo -u postgres psql -c "CREATE USER $POSTGRES_USER WITH PASSWORD '$POSTGRES_PASSWORD';"
-        sudo -u postgres psql -c "CREATE DATABASE mlflow_db;"
-        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO $POSTGRES_USER;"
+        # Change to postgres user's home directory before running commands
+        sudo -u postgres bash -c '
+          cd ~
+          psql -c "CREATE USER ${{ secrets.POSTGRES_USER }} WITH PASSWORD '\''${{ secrets.POSTGRES_PASSWORD }}'\'';"
+          psql -c "CREATE DATABASE mlflow_db;"
+          psql -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO ${{ secrets.POSTGRES_USER }};"
+        '
 
-        # Update pg_hba.conf to allow password authentication
-        sudo sed -i 's/local\s\+all\s\+all\s\+peer/local all all md5/g' /etc/postgresql/*/main/pg_hba.conf
+        # Configure pg_hba.conf to allow password authentication
+        sudo tee /etc/postgresql/*/main/pg_hba.conf > /dev/null <<EOL
+        local   all             postgres                                peer
+        local   all             all                                     md5
+        host    all             all             127.0.0.1/32           md5
+        host    all             all             ::1/128                 md5
+        EOL
+
+        # Restart PostgreSQL to apply changes
         sudo systemctl restart postgresql.service
 
-        # Verify user and database creation
-        sudo -u postgres psql -c "\du"
-        sudo -u postgres psql -c "\l"
+        # Verify setup (from postgres home directory)
+        sudo -u postgres bash -c '
+          cd ~
+          psql -c "\du"
+          psql -c "\l"
+        '
 
-    - name: Locate and make workflow script executable
-      run: |
-        find . -name "train_workflow.sh"
-        chmod +x $(find . -name "train_workflow.sh")
-
-    - name: Train model
+    - name: Run the workflow.sh
+      working-directory: ./model_deployment1
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost/mlflow_db"
       run: |
-        SCRIPT_PATH=$(find . -name "train_workflow.sh")
-        if [ -z "$SCRIPT_PATH" ]; then
-          echo "train_workflow.sh not found!"
-          exit 1
-        fi
-        
-        echo "Found script at: $SCRIPT_PATH"
-        chmod +x "$SCRIPT_PATH"
-        
-        # Explicitly set working directory to script's parent directory
-        SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
-        cd "$SCRIPT_DIR"
-        
         echo "Current directory: $(pwd)"
-        "$SCRIPT_PATH"
+        echo "Running train_workflow.sh"
+        ./train_workflow.sh
+
