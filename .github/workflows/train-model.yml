@@ -9,10 +9,6 @@ jobs:
   train:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./model_deployment1
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -27,50 +23,41 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r ./model_deployment1/requirements.txt
 
-    - name: Check directory permissions
-      run: ls -l /home/runner/work/DeepFM/DeepFM/model_deployment1
-    
-
-    - name: Check if directory exists and reset permissions
-      run: |
-        echo "Checking the files/folder"
-        ls
-
-    - name: Set up POSTGRESQL
+    - name: Set up PostgreSQL
       env:
-        PGUSER: ${{ secrets.POSTGRES_USER }}  # This should be 'anish' based on your setup
-        PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       run: |
-        # Install PostgreSQL and start the service
+        # Install PostgreSQL
         sudo apt-get update
         sudo apt-get install -y postgresql postgresql-contrib
-        sudo service postgresql start
 
-        # Update authentication method to allow password login
-        sudo sed -i "s/local   all             all                                     peer/local   all             all                                     md5/g" /etc/postgresql/*/main/pg_hba.conf
-        sudo service postgresql restart
+        # Start PostgreSQL service
+        sudo systemctl start postgresql.service
 
-        # Update password for the PostgreSQL user
-        sudo -u postgres psql -c "ALTER USER $PGUSER PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+        # Create PostgreSQL user and database
+        sudo -u postgres psql -c "CREATE USER $POSTGRES_USER WITH PASSWORD '$POSTGRES_PASSWORD';"
+        sudo -u postgres psql -c "CREATE DATABASE mlflow_db;"
+        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO $POSTGRES_USER;"
 
-        # Create database and user for MLFlow
-        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U postgres -c "CREATE DATABASE mlflow_db;"
-        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U postgres -d mlflow_db -c "CREATE USER mlflow_user WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
-        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U postgres -d mlflow_db -c "GRANT ALL PRIVILEGES ON DATABASE mlflow_db TO mlflow_user;"
+        # Update pg_hba.conf to allow password authentication
+        sudo sed -i 's/local\s\+all\s\+all\s\+peer/local all all md5/g' /etc/postgresql/*/main/pg_hba.conf
+        sudo systemctl restart postgresql.service
 
-        # Ensure the PostgreSQL user 'mlflow_user' exists and has the proper privileges
-        PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -U postgres -c "SELECT * FROM pg_roles WHERE rolname='mlflow_user';"
+        # Verify user and database creation
+        sudo -u postgres psql -c "\du"
+        sudo -u postgres psql -c "\l"
 
-    # Ensure `train_workflow.sh` is executable
-    - name: Make workflow.sh executable
-      run: chmod +x train_workflow.sh
+    - name: Make workflow script executable
+      run: chmod +x ./model_deployment1/train_workflow.sh
 
-    # Set AWS credentials as environment variables & Run workflow
-    - name: Set AWS credentials & Train model
+    - name: Train model
       env: 
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         POSTGRES_URI: "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost/mlflow_db"
-      run: ./train_workflow.sh
+      run: |
+        cd ./model_deployment1
+        ./train_workflow.sh
