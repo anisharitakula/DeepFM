@@ -24,7 +24,7 @@ python -m train \
         --dataset2-s3loc $DATASET2_S3LOC \
         --embed-dim 16 \
         --lr .005 \
-        --epochs 4
+        --epochs 3
 
 #Run the pytest codes marked as code
 PYTHONPATH=$(pwd) pytest -m code

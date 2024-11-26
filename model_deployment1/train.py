@@ -96,10 +96,13 @@ def train(
         # Log a metric
         mlflow.log_metric("final_loss", val_loss)
 
+        # Getting the artifact uri
+        print(f"Artifact URI: {mlflow.get_artifact_uri()}")
+
         # Log the PyTorch model
         mlflow.pytorch.log_model(model,artifact_path='model')
 
-        print(f"Artifact URI: {mlflow.get_artifact_uri()}")
+        
 
         print("Model logged successfully!")
 
