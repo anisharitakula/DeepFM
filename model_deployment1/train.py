@@ -87,6 +87,10 @@ def train(
 
     # Log the run using MLflow context manager
     with mlflow.start_run(experiment_id=experiment_id):
+
+        #Get mlflow tracking uri
+        print(f"Mlflow tracking uri: {mlflow.get_tracking_uri()}")
+
         # Log parameters
         mlflow.log_param("embed_dim", embed_dim)
         mlflow.log_param("learning_rate", lr)

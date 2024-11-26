@@ -2,6 +2,7 @@ import os
 import psycopg2
 from sqlalchemy import create_engine
 import mlflow
+from utils.utils import get_best_run_id
 from config.config import EXPERIMENT_NAME
 import pandas as pd
 
@@ -42,3 +43,5 @@ def test_postgres_connection():
         import traceback
         traceback.print_exc()
 
+if __name__=="__main__":
+    get_best_run_id(EXPERIMENT_NAME)

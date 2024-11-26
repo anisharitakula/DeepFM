@@ -22,15 +22,19 @@ sleep 10
 python -m train \
         --dataset1-s3loc $DATASET1_S3LOC \
         --dataset2-s3loc $DATASET2_S3LOC \
-        --embed-dim 16 \
+        --embed-dim 64 \
         --lr .005 \
-        --epochs 3
+        --epochs 4
 
 #Run the pytest codes marked as code
 PYTHONPATH=$(pwd) pytest -m code
 
 #Run the pytest codes in the data folder
 pytest --dataset1-loc=$DATASET1_S3LOC tests/data --verbose --disable-warnings
+
+#Run sample prediction
+python -m predict \
+        --input "(1,1,\"Adventure|Animation|Children|Comedy|Fantasy\")"
 
 
 

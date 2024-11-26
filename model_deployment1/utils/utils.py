@@ -42,9 +42,9 @@ def get_best_run_id(experiment_name: str, metric: str = "val_loss"):
         experiment_ids=[experiment.experiment_id],
         filter_string="",
         order_by=[f"metrics.{metric} ASC"],  # Sort by validation loss (smallest first)
-        max_results=1                       # Fetch only the top result
+        #max_results=1                       # Fetch only the top result
     )
-    
+    print(runs_df['run_id'])
     if runs_df.empty:
         raise ValueError(f"No runs found for experiment '{experiment_name}' with metric '{metric}'.")
     
