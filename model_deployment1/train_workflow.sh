@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #Setting mlflow uri environment variables
-export MLFLOW_TRACKING_URI=$POSTGRES_URI
 export MLFLOW_ARTIFACT_URI=$(python -c "from config import config; print(config.MLFLOW_ARTIFACT_URI)")
 export DATASET1_S3LOC="s3://deepfm-model/input_data/ratings.csv"
 export DATASET2_S3LOC="s3://deepfm-model/input_data/movies.csv"
@@ -12,8 +11,7 @@ mlflow server \
     --backend-store-uri "$MLFLOW_TRACKING_URI" \
     --default-artifact-root "$MLFLOW_ARTIFACT_URI" \
     --host 0.0.0.0 \
-    --port 5000 \
-    --workers 1 &
+    --port 8080 &
 
 #Wait for server to start
 sleep 10
@@ -22,7 +20,7 @@ sleep 10
 python -m train \
         --dataset1-s3loc $DATASET1_S3LOC \
         --dataset2-s3loc $DATASET2_S3LOC \
-        --embed-dim 64 \
+        --embed-dim 10 \
         --lr .005 \
         --epochs 4
 

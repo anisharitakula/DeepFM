@@ -16,6 +16,7 @@ from models.base_learner import BaseLearner
 from config.config import EXPERIMENT_NAME, SEED
 from typing_extensions import Annotated
 import os
+import traceback
 
 app = typer.Typer()
 
@@ -36,12 +37,31 @@ def train(
     set_seed(SEED)
 
     #print(f"Active artifact URI: {mlflow.get_artifact_uri()}")
-
-    # Create or get the experiment ID
     try:
         experiment_id = mlflow.create_experiment(EXPERIMENT_NAME,artifact_location=os.environ['MLFLOW_ARTIFACT_URI'])
     except Exception:
         experiment_id = mlflow.get_experiment_by_name(EXPERIMENT_NAME).experiment_id
+
+    # try:
+    #     print(f"Attempting to create experiment: {EXPERIMENT_NAME}")
+    #     print(f"Artifact Location: {os.environ['MLFLOW_ARTIFACT_URI']}")
+    #     experiment_id = mlflow.create_experiment(EXPERIMENT_NAME, artifact_location=os.environ['MLFLOW_ARTIFACT_URI'])
+    # except Exception as e:
+    #     print("Experiment creation failed:")
+    #     print(f"Error Type: {type(e)}")
+    #     print(f"Error Details: {str(e)}")
+    #     traceback.print_exc()
+    
+    # try:
+    #     print("Attempting to retrieve existing experiment")
+    #     experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
+    #     if experiment:
+    #         experiment_id = experiment.experiment_id
+    #         print(f"Retrieved existing experiment ID: {experiment_id}")
+    #     else:
+    #         print("Could not find existing experiment")
+    # except Exception as retrieve_err:
+    #     print(f"Failed to retrieve experiment: {retrieve_err}")
 
     # Load and process datasets
     data = pd.read_csv(dataset1_s3loc)
