@@ -7,22 +7,22 @@ export DATASET2_S3LOC="s3://deepfm-model/input_data/movies.csv"
 
 
 #Run the MLflow server
-mlflow server \
-    --backend-store-uri "$MLFLOW_TRACKING_URI" \
-    --default-artifact-root "$MLFLOW_ARTIFACT_URI" \
-    --host 0.0.0.0 \
-    --port 8080 &
+# mlflow server \
+#     --backend-store-uri "$MLFLOW_TRACKING_URI" \
+#     --default-artifact-root "$MLFLOW_ARTIFACT_URI" \
+#     --host 0.0.0.0 \
+#     --port 8080 &
 
 #Wait for server to start
-sleep 10
+#sleep 10
 
 #Run the model training code
 python -m train \
         --dataset1-s3loc $DATASET1_S3LOC \
         --dataset2-s3loc $DATASET2_S3LOC \
-        --embed-dim 10 \
+        --embed-dim 16 \
         --lr .005 \
-        --epochs 4
+        --epochs 5
 
 #Run the pytest codes marked as code
 PYTHONPATH=$(pwd) pytest -m code
