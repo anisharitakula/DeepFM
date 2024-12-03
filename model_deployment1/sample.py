@@ -2,8 +2,9 @@ import os
 import psycopg2
 from sqlalchemy import create_engine
 import mlflow
+from mlflow import tracking
 from utils.utils import get_best_run_id
-from config.config import EXPERIMENT_NAME
+from config.config import EXPERIMENT_NAME,MODEL_NAME
 import pandas as pd
 
 def test_postgres_connection():
@@ -45,3 +46,10 @@ def test_postgres_connection():
 
 if __name__=="__main__":
     get_best_run_id(EXPERIMENT_NAME)
+
+    # Connect to the tracking server
+    client = tracking.MlflowClient()
+
+    # Delete a registered model by name
+    client.delete_registered_model(name=MODEL_NAME)
+
