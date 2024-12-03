@@ -7,3 +7,6 @@ pytest==8.3.3
 mlflow==2.18.0
 psycopg2-binary
 boto3
+uvicorn==0.32.1
+fastapi==0.115.5
+pydantic==2.10.2
