@@ -20,9 +20,9 @@ export DATASET2_S3LOC="s3://deepfm-model/input_data/movies.csv"
 python -m train \
         --dataset1-s3loc $DATASET1_S3LOC \
         --dataset2-s3loc $DATASET2_S3LOC \
-        --embed-dim 16 \
+        --embed-dim 8 \
         --lr .005 \
-        --epochs 1
+        --epochs 2
 
 #Run the pytest codes marked as code
 PYTHONPATH=$(pwd) pytest -m code

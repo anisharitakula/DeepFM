@@ -16,10 +16,10 @@ RUN apt-get update && apt-get install -y \
 COPY . /app
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+#RUN pip install --no-cache-dir -r requirements.txt
 
 # Install additional serving dependencies
-RUN pip install mlflow fastapi uvicorn numpy
+RUN pip install mlflow fastapi uvicorn numpy pydantic
 
 # Save the model URI for later use
 RUN echo "$MODEL_URI" > model_uri.txt
