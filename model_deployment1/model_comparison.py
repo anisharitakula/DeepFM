@@ -53,7 +53,7 @@ def compare_models(new_model, production_model):
     run = client.get_run(production_model.run_id)
     prod_loss = run.data.metrics.get('final_loss', float('inf'))
     
-    return new_loss > prod_loss
+    return new_loss < prod_loss
 
 def main():
     experiment_name = EXPERIMENT_NAME
