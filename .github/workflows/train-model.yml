@@ -92,6 +92,11 @@ jobs:
 
     - name: Cleanup Build Artifacts
       run: find . -name '__pycache__' -exec rm -rf {} +
+    
+    - name: Debug Git Status
+      run: |
+        git status
+        git diff
 
     - name: Push to Main Branch
       if: ${{ steps.model-comparison.outputs.DEPLOYMENT_STATUS == 'true' }}
