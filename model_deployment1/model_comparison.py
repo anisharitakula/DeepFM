@@ -28,7 +28,8 @@ def get_production_model():
     """
     try:
         client = mlflow.tracking.MlflowClient()
-        production_models = client.search_model_versions("stage='Production'")
+
+        production_models = client.list_model_versions(f"name='{MODEL_NAME}'")
         
         if production_models:
             return production_models[0]
@@ -45,10 +46,14 @@ def compare_models(new_model, production_model):
         return True  # No existing production model
     
     # Compare accuracy or your preferred performance metric
-    new_accuracy = new_model['val_loss']
-    prod_accuracy = float(production_model.source.split('/')[-2])  # Adjust based on how you track metrics
+    new_loss = new_model['val_loss']
     
-    return new_accuracy > prod_accuracy
+    # Extract production model loss from tags or metrics
+    client = mlflow.tracking.MlflowClient()
+    run = client.get_run(production_model.run_id)
+    prod_loss = run.data.metrics.get('final_loss', float('inf'))
+    
+    return new_loss > prod_loss
 
 def main():
     experiment_name = EXPERIMENT_NAME
@@ -73,9 +78,20 @@ def main():
         
         # Register the new model as production
         client = mlflow.tracking.MlflowClient()
+
+        
+
+        # Register the model
+        model_version = client.create_model_version(
+            name=MODEL_NAME,
+            source=new_model['artifact_uri'],
+            run_id=new_model['run_id']
+        )
+
+        # Transition to Production stage
         client.transition_model_version_stage(
             name=MODEL_NAME,
-            version=new_model['run_id'],
+            version=model_version.version,
             stage='Production',
             archive_existing_versions=True
         )
