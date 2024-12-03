@@ -8,6 +8,8 @@ on:
 
 jobs:
   ci-pipeline:
+    outputs:
+      DEPLOYMENT_STATUS: ${{ steps.model-comparison.outputs.DEPLOYMENT_STATUS }}
     runs-on: ubuntu-latest
     
     steps:
@@ -110,6 +112,11 @@ jobs:
         git pull origin main
         git merge ${{ github.ref_name }}
         git push origin main
+    
+    - name: Debug Deployment Status
+      run: |
+        echo "Deployment Status: $(cat deployment_status.txt)"
+        cat deployment_status.txt
   
   cd-pipeline:
     needs: ci-pipeline
