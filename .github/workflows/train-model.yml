@@ -90,6 +90,9 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
+    - name: Cleanup Build Artifacts
+      run: find . -name '__pycache__' -exec rm -rf {} +
+
     - name: Push to Main Branch
       if: ${{ steps.model-comparison.outputs.DEPLOYMENT_STATUS == 'true' }}
       run: |
