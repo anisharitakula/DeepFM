@@ -54,7 +54,7 @@ jobs:
       working-directory: ./model_deployment1
       run: |
         # Add your test commands here
-        pytest -m code
+        PYTHONPATH=$(pwd) pytest -m code
         pytest --dataset1-loc='s3://deepfm-model/input_data/ratings.csv' tests/data --verbose --disable-warnings
     
     - name: Compare Model Performance
