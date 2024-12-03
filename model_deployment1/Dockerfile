@@ -19,7 +19,7 @@ COPY . /app
 #RUN pip install --no-cache-dir -r requirements.txt
 
 # Install additional serving dependencies
-RUN pip install mlflow fastapi uvicorn numpy pydantic
+RUN pip install mlflow fastapi numpy pydantic
 
 # Save the model URI for later use
 RUN echo "$MODEL_URI" > model_uri.txt
