@@ -29,7 +29,7 @@ def get_production_model():
     try:
         client = mlflow.tracking.MlflowClient()
 
-        production_models = client.list_model_versions(f"name='{MODEL_NAME}'")
+        production_models = client.search_model_versions(f"name='{MODEL_NAME}'")
         
         if production_models:
             return production_models[0]
@@ -79,7 +79,10 @@ def main():
         # Register the new model as production
         client = mlflow.tracking.MlflowClient()
 
-        
+        try:
+            client.create_registered_model(name=MODEL_NAME)
+        except mlflow.exceptions.RestException:
+            print(f"Model {MODEL_NAME} already exists.")
 
         # Register the model
         model_version = client.create_model_version(
