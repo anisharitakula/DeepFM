@@ -21,7 +21,7 @@ python -m train \
         --dataset1-s3loc $DATASET1_S3LOC \
         --dataset2-s3loc $DATASET2_S3LOC \
         --embed-dim 16 \
-        --lr .005 \
+        --lr .006 \
         --epochs 1
 
 #Run the pytest codes marked as code
