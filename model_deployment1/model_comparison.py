@@ -2,6 +2,9 @@ import os
 import mlflow
 import json
 from config.config import EXPERIMENT_NAME,MODEL_NAME
+import pandas as pd
+
+pd.set_option('display.max_columns', None)
 
 # Set MLflow tracking URI
 mlflow.set_tracking_uri(os.getenv('MLFLOW_TRACKING_URI'))
@@ -12,10 +15,16 @@ def get_best_model_in_experiment(experiment_name):
     """
     experiment = mlflow.get_experiment_by_name(experiment_name)
     runs = mlflow.search_runs(experiment_ids=[experiment.experiment_id])
+
+    print(runs)
+
     
     # Assuming we're using val_loss as the key metric - adjust as needed
-    best_run = runs.sort_values('metrics.final_loss', ascending=False).iloc[0]
+    best_run = runs.sort_values('metrics.final_loss', ascending=True).iloc[0]
     
+    print(best_run)
+
+
     return {
         'run_id': best_run['run_id'],
         'artifact_uri': best_run['artifact_uri'],
@@ -52,6 +61,8 @@ def compare_models(new_model, production_model):
     client = mlflow.tracking.MlflowClient()
     run = client.get_run(production_model.run_id)
     prod_loss = run.data.metrics.get('final_loss', float('inf'))
+
+    print(f"new loss is {new_loss} and prod loss is {prod_loss}")
     
     return new_loss < prod_loss
 
