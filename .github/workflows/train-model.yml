@@ -127,7 +127,7 @@ jobs:
     if: ${{ needs.ci-pipeline.outputs.DEPLOYMENT_STATUS == 'true' }}
     
     # This will use the EC2 hosted runner
-    runs-on: [self-hosted, ec2]
+    runs-on: self-hosted
     
     steps:
     - uses: actions/checkout@v4
