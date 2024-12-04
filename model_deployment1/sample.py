@@ -45,7 +45,7 @@ def test_postgres_connection():
         traceback.print_exc()
 
 if __name__=="__main__":
-    get_best_run_id(EXPERIMENT_NAME)
+    #get_best_run_id(EXPERIMENT_NAME)
 
     # Connect to the tracking server
     client = tracking.MlflowClient()

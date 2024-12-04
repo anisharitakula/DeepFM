@@ -114,7 +114,10 @@ jobs:
         git push origin main
     
     - name: Debug Deployment Status
+      working-directory: ./model_deployment1
       run: |
+        echo "Current directory contents:"
+        ls -l
         echo "Deployment Status: $(cat deployment_status.txt)"
         cat deployment_status.txt
   
