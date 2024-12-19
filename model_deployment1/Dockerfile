@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Copy only the serve.py file into the container
+COPY serving/serve.py /app/serve.py
 
 # Install any needed packages specified in requirements.txt
 #RUN pip install --no-cache-dir -r requirements.txt
@@ -31,4 +31,4 @@ EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
 
 # Run the serving script when the container launches
-CMD ["python", "serving/serve.py"]
+CMD ["python", "serve.py"]

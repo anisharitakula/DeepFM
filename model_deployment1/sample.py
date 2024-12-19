@@ -52,7 +52,7 @@ if __name__=="__main__":
 
     try:
         # List experiments to confirm connection to the server
-        experiments = client.list_experiments()
+        experiments = client.search_experiments(f"name:{EXPERIMENT_NAME}")
         if experiments:
             print("Successfully connected to the MLflow tracking server!")
             print(f"Experiments: {[exp.name for exp in experiments]}")
