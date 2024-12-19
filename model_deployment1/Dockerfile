@@ -19,7 +19,7 @@ COPY serving/serve.py /app/serve.py
 #RUN pip install --no-cache-dir -r requirements.txt
 
 # Install additional serving dependencies
-RUN pip install mlflow fastapi numpy pydantic
+RUN pip install mlflow fastapi numpy pydantic torch
 
 # Save the model URI for later use
 RUN echo "$MODEL_URI" > model_uri.txt
