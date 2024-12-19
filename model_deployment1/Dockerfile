@@ -31,4 +31,4 @@ EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
 
 # Run the serving script when the container launches
-CMD ["python", "serve.py"]
+CMD ["python", "serving/serve.py"]

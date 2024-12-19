@@ -50,6 +50,17 @@ if __name__=="__main__":
     # Connect to the tracking server
     client = tracking.MlflowClient()
 
+    try:
+        # List experiments to confirm connection to the server
+        experiments = client.list_experiments()
+        if experiments:
+            print("Successfully connected to the MLflow tracking server!")
+            print(f"Experiments: {[exp.name for exp in experiments]}")
+        else:
+            print("No experiments found.")
+    except Exception as e:
+        print(f"Failed to connect to the MLflow tracking server. Error: {e}")
+
     # Delete a registered model by name
     client.delete_registered_model(name=MODEL_NAME)
 
