@@ -2,6 +2,7 @@ import mlflow.pytorch
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import numpy as np
+import torch
 
 class PredictionInput(BaseModel):
     data: list[int,int,str]
