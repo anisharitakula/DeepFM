@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY serving/serve.py /app/serve.py
 
-RUN pip install --no-cache-dir mlflow fastapi numpy pydantic torch==2.0.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip install --no-cache-dir mlflow fastapi numpy pydantic torch==2.0.1+cpu -f https://download.pytorch.org/whl/torch_stable.html boto3 botocore
 
 RUN echo "$MODEL_URI" > model_uri.txt
 
