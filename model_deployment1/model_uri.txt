@@ -1,0 +1,1 @@
+s3://deepfm-model/model-artifacts/0d1f255a631d42879a92f0bf4a33a0e5/artifacts

@@ -13,10 +13,12 @@ from preprocess.sparse_dataset import SparseMatrixDataset
 from preprocess.collate_fn import fm_collate_fn
 from models.dfm import ModelDFM
 from models.base_learner import BaseLearner
-from config.config import EXPERIMENT_NAME, SEED
+from config.config import EXPERIMENT_NAME, SEED, S3_LOCATION
 from typing_extensions import Annotated
 import os
 import traceback
+import s3fs
+import json
 
 app = typer.Typer()
 
@@ -129,6 +131,21 @@ def train(
         
 
         print("Model logged successfully!")
+    
+    #Uploading data into S3
+    fs = s3fs.S3FileSystem()
+    s3_path=f"{S3_LOCATION}/config_params"
+    
+    config_dict={'unique_users':unique_users,'unique_movies':unique_movies,'movie_genres_dict':movie_genres_dict}
+    params_dict={"embed_dim":embed_dim,"lr":lr,"epochs":epochs}
+
+    with fs.open(f"{s3_path}/config_data.json", "w") as json_file:
+        json.dump(config_dict, json_file)
+
+    with fs.open(f"{s3_path}/model_params.json","w") as json_file:
+        json.dump(params_dict,json_file)
+    
+    print("JSON file written to s3 successfully")
 
 if __name__ == "__main__":
     app()
